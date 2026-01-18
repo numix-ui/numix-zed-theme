@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Validate theme files
+        run: |
+          if [ ! -f "themes/numix.json" ]; then
+            echo "Theme file missing!"
+            exit 1
+          fi
+          if [ ! -f "extension.toml" ]; then
+            echo "Extension manifest missing!"
+            exit 1
+          fi
+          echo "All theme files present"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            themes/numix.json
+            extension.toml
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print release info
+        run: |
+          echo "Version: ${{ steps.version.outputs.VERSION }}"
+          echo "Theme files ready for Zed extension marketplace"

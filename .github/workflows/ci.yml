@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  validate-theme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate theme files
+        run: |
+          echo "Checking theme files..."
+          test -f themes/numix.json && echo "Zed theme found" || (echo "Zed theme missing" && exit 1)
+          test -f extension.toml && echo "Extension manifest found" || (echo "Extension manifest missing" && exit 1)
+
+      - name: Check JSON syntax
+        run: python3 -c "import json; json.load(open('themes/numix.json'))" && echo "JSON syntax OK"
+
+      - name: Verify theme structure
+        run: >
+          python3 -c
+          "import json; import sys; 
+          with open('themes/numix.json') as f: 
+              theme = json.load(f) 
+              assert 'name' in theme 
+              assert 'themes' in theme 
+              assert len(theme['themes']) > 0 
+          print('Theme structure OK')"
